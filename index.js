@@ -6,7 +6,7 @@ const cors = require("cors");
 
 // app
 const app = express();
-const port = 8900;
+const PORT = process.env.PORT || 8900;
 
 // middleware
 app.use(cors());
@@ -89,4 +89,4 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(port, () => console.log(`Socket server running... ${port}!`));
+server.listen(PORT, () => console.log(`Socket server running... ${PORT}!`));
