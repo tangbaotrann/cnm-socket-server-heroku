@@ -30,6 +30,10 @@ const io = new Server(server, {
   },
 });
 
+console.log(process.env.SOCKET_SERVER_BASE_URL);
+console.log(process.env.SOCKET_SERVER_BASE_URL_DEV);
+console.log(process.env.SOCKET_SERVER_BASE_URL_ANY);
+
 // save users
 let users = [];
 
