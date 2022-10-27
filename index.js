@@ -16,7 +16,11 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "*"],
+    origin: [
+      "http://localhost:3000",
+      "https://develop.d15j4islltbvt.amplifyapp.com/login",
+      "*",
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
