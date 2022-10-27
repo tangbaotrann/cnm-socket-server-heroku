@@ -18,7 +18,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "https://develop.d15j4islltbvt.amplifyapp.com/login",
+      "https://develop.d15j4islltbvt.amplifyapp.com",
       "*",
     ],
     methods: ["GET", "POST"],
