@@ -97,6 +97,16 @@ io.on("connection", (socket) => {
     }
   });
 
+  //send friend request
+  socket.on("send_friend_request", ({request}) => {
+    try{
+      console.log(request);
+      io.emit("receiver_friend_request", request);
+    }catch (error) {
+      console.log(`[add friend] -> ${err}`);
+    }
+  })
+
   // When user disconnected
   socket.on("disconnect", () => {
     try {
