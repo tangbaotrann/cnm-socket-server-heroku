@@ -87,10 +87,20 @@ io.on("connection", (socket) => {
     }
   });
 
+  //recall message
+  socket.on("recall_message", ({ message }) => {
+    try {
+      console.log(message);
+      io.emit("receiver_recall_message", message);
+    } catch (error) {
+      console.log(`[recall message] -> ${err}`);
+    }
+  });
+
   // When user disconnected
   socket.on("disconnect", () => {
     try {
-      console.log("---> A user disconnected.");
+      console.log("---> A user disconnected.", socket.id);
       removeUser(socket.id);
 
       // (get users when online)
