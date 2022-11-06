@@ -49,11 +49,16 @@ const removeUser = (socketId) => {
   users = users.filter((user) => user.socketId !== socketId);
 };
 
+const findUserById = (id) => {
+  return users.find((user) => user.userId === id);
+};
+
 io.on("connection", (socket) => {
   console.log("---> A user connected... " + `${socket.id}`);
 
   // status user
   socket.on("status_user", (userId) => {
+    console.log(userId);
     try {
       statusUser(userId, socket.id);
 
@@ -93,19 +98,46 @@ io.on("connection", (socket) => {
       console.log(message);
       io.emit("receiver_recall_message", message);
     } catch (error) {
-      console.log(`[recall message] -> ${err}`);
+      console.log(`[recall message] -> ${error}`);
     }
   });
 
   //send friend request
-  socket.on("send_friend_request", ({request}) => {
-    try{
+  socket.on("send_friend_request", ({ request }) => {
+    try {
       console.log(request);
-      io.emit("receiver_friend_request", request);
-    }catch (error) {
-      console.log(`[add friend] -> ${err}`);
+      const { receiverId } = request;
+      const _user = findUserById(receiverId);
+      //check user online
+      if (_user) {
+        console.log("destination", _user);
+        io.to(_user.socketId).emit("receiver_friend_request", request);
+      } else {
+        console.warn("user offline");
+      }
+    } catch (error) {
+      console.log(`[send_friend_request] -> ${error}`);
     }
-  })
+  });
+
+  //accept friend request
+  socket.on(
+    "accept_friend_request",
+    ({ listFriendsReceiver, listFriendsSender, idReceiver, idSender }) => {
+      const receiver = findUserById(idReceiver);
+      const sender = findUserById(idSender);
+      console.log(listFriendsReceiver);
+      //no run with receiver
+      if (receiver && sender) {
+        console.log("receiver-", receiver);
+        console.log("sender-", sender);
+        io.to(sender.socketId).emit("send_friends", listFriendsSender);
+        io
+          .to(receiver.socketId)
+          .emit("receive_friends", listFriendsReceiver);
+      }
+    }
+  );
 
   // When user disconnected
   socket.on("disconnect", () => {
