@@ -123,21 +123,69 @@ io.on("connection", (socket) => {
   //accept friend request
   socket.on(
     "accept_friend_request",
-    ({ listFriendsReceiver, listFriendsSender, idReceiver, idSender }) => {
-      const receiver = findUserById(idReceiver);
-      const sender = findUserById(idSender);
-      console.log(listFriendsReceiver);
-      //no run with receiver
-      if (receiver && sender) {
-        console.log("receiver-", receiver);
-        console.log("sender-", sender);
-        io.to(sender.socketId).emit("send_friends", listFriendsSender);
-        io
-          .to(receiver.socketId)
-          .emit("receive_friends", listFriendsReceiver);
+    ({
+      listFriendsReceiver,
+      listFriendsSender,
+      sender,
+      receiver,
+      conversation,
+    }) => {
+      try {
+        const _receiver = findUserById(receiver.id);
+        const _sender = findUserById(sender.id);
+        console.log(_receiver, _sender);
+        //no run with receiver
+        if (_receiver) {
+          const _conversation = {
+            ...conversation,
+            name: sender.name,
+            imageLinkOfConver: sender.avatar,
+          };
+          io.to(_receiver.socketId).emit(
+            "receive_friends",
+            listFriendsReceiver
+          );
+          io.to(_receiver.socketId).emit(
+            "receive_friends_give_conversation",
+            _conversation
+          );
+        }
+
+        if (_sender) {
+          const _conversation = {
+            ...conversation,
+            name: receiver.name,
+            imageLinkOfConver: receiver.avatar,
+          };
+          io.to(_sender.socketId).emit("send_friends", listFriendsSender);
+          io.to(_sender.socketId).emit(
+            "send_friends_give_conversation",
+            _conversation
+          );
+        }
+      } catch (err) {
+        console.warn(`[accept_friend_request] -> ${err}`);
       }
     }
   );
+
+  //create group
+  socket.on("create_group", ({ conversation }) => {
+    //console.log(conversation.members);
+    //get users in conversation group online
+    try {
+      conversation.members.forEach((member) => {
+        const user = findUserById(member);
+        //console.log("----->", user);
+        //send message to user doing online
+        if (user) {
+          io.to(user.socketId).emit("send_conversation_group", conversation);
+        }
+      });
+    } catch (err) {
+      console.warn(`[create_group] -> ${err}`);
+    }
+  });
 
   // When user disconnected
   socket.on("disconnect", () => {
