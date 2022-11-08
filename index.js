@@ -83,8 +83,21 @@ io.on("connection", (socket) => {
 
   // user send message
   socket.on("send_message", ({ message }) => {
+    //console.log(message);
     try {
-      console.log("MESSAGE - SOCKET - ", message);
+      const { conversationID, contentMessage, content, createAt } = message;
+      const conversation = {
+        conversationID,
+        content,
+        contentMessage,
+        createAt,
+      };
+      message.members.forEach((member) => {
+        const user = findUserById(member);
+        console.log("member -> ", user);
+        if (user)
+          io.to(user.socketId).emit("update_last_message", conversation);
+      });
 
       io.to(message.conversationID).emit("receiver_message", message);
     } catch (err) {
@@ -176,7 +189,7 @@ io.on("connection", (socket) => {
     try {
       conversation.members.forEach((member) => {
         const user = findUserById(member);
-        //console.log("----->", user);
+        console.log("----->", user);
         //send message to user doing online
         if (user) {
           io.to(user.socketId).emit("send_conversation_group", conversation);
@@ -184,6 +197,55 @@ io.on("connection", (socket) => {
       });
     } catch (err) {
       console.warn(`[create_group] -> ${err}`);
+    }
+  });
+
+  //block user in group
+  socket.on("block_user_in_group", ({ info }) => {
+    try {
+      const { _id, idMember, action, time, members } = info;
+      const userBlocked = findUserById(idMember);
+      const idConversationBlocked = _id;
+      const conversationUpdate = {
+        conversationID: _id,
+        contentMessage: action,
+        createAt: time,
+      };
+      console.log(userBlocked);
+      if (userBlocked)
+        io.to(userBlocked.socketId).emit(
+          "remove_conversation_block_group",
+          idConversationBlocked
+        );
+      members.forEach((member) => {
+        const user = findUserById(member);
+        if (user)
+          io.to(user.socketId).emit("update_last_message", conversationUpdate);
+      });
+    } catch (error) {
+      console.warn(`[block_user_in_group] -> ${error}`);
+    }
+  });
+
+  //out group
+  socket.on("user_out_group", ({ info }) => {
+    try {
+      const { _id, idMember, action, time, members } = info;
+      const leftUser = findUserById(idMember);
+      const conversationUpdate = {
+        conversationID: _id,
+        contentMessage: action,
+        createAt: time,
+      };
+      if (leftUser)
+        io.to(leftUser.socketId).emit("remove_conversation_block_group", _id);
+      members.forEach((member) => {
+        const user = findUserById(member);
+        if (user)
+          io.to(user.socketId).emit("update_last_message", conversationUpdate);
+      });
+    } catch (err) {
+      console.warn(`[user_out_group] --> ${err}`);
     }
   });
 
