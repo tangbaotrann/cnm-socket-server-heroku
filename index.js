@@ -255,6 +255,7 @@ io.on("connection", (socket) => {
       const conversationUpdate = {
         conversationID: id,
         contentMessage: lastMessage,
+        members,
         createAt: time,
       };
       updateConversationBySocket(members, conversationUpdate);
@@ -295,7 +296,7 @@ io.on("connection", (socket) => {
       console.warn(`[change_avatar_group] -> ${error}`);
     }
   });
-  
+
   //block user in group
   socket.on("block_user_in_group", ({ info }) => {
     try {
@@ -306,6 +307,7 @@ io.on("connection", (socket) => {
         conversationID: _id,
         contentMessage: action,
         createAt: time,
+        members
       };
       console.log(userBlocked);
       if (userBlocked)
@@ -313,11 +315,12 @@ io.on("connection", (socket) => {
           "remove_conversation_block_group",
           idConversationBlocked
         );
-      members.forEach((member) => {
-        const user = findUserById(member);
-        if (user)
-          io.to(user.socketId).emit("update_last_message", conversationUpdate);
-      });
+      updateConversationBySocket(members, conversationUpdate);
+      // members.forEach((member) => {
+      //   const user = findUserById(member);
+      //   if (user)
+      //     io.to(user.socketId).emit("update_last_message", conversationUpdate);
+      // });
     } catch (error) {
       console.warn(`[block_user_in_group] -> ${error}`);
     }
