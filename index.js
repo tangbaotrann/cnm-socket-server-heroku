@@ -255,6 +255,7 @@ io.on("connection", (socket) => {
       const conversationUpdate = {
         conversationID: id,
         contentMessage: lastMessage,
+        members,
         createAt: time,
       };
       updateConversationBySocket(members, conversationUpdate);
