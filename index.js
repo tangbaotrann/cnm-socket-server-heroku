@@ -188,11 +188,13 @@ io.on("connection", (socket) => {
     //get users in conversation group online
     try {
       conversation.members.forEach((member) => {
-        const user = findUserById(member);
-        console.log("----->", user);
-        //send message to user doing online
-        if (user) {
-          io.to(user.socketId).emit("send_conversation_group", conversation);
+        if (!(member === conversation.createdBy)) {
+          const user = findUserById(member);
+          console.log("----->", user);
+          //send message to user doing online
+          if (user) {
+            io.to(user.socketId).emit("send_conversation_group", conversation);
+          }
         }
       });
     } catch (err) {
@@ -200,6 +202,100 @@ io.on("connection", (socket) => {
     }
   });
 
+  //support update lastMessage
+  const updateConversationBySocket = (members, conversation) => {
+    members.forEach((member) => {
+      const user = findUserById(member);
+      if (user) io.to(user.socketId).emit("update_last_message", conversation);
+    });
+  };
+
+  //add user to group
+  socket.on("add_user_to_group", ({ info }) => {
+    try {
+      //get conversation and more prop
+      //add conversation to new member and update lastMessage to users online in group
+      const {
+        id,
+        name,
+        members,
+        imageLink,
+        lastMessage,
+        time,
+        isGroup,
+        createBy,
+        isCalling,
+        deleteBy,
+        blockBy,
+        newMember,
+      } = info;
+      const conversation = {
+        id,
+        name,
+        members,
+        imageLinkOfConver: imageLink,
+        lastMessage,
+        time,
+        isGroup,
+        createBy,
+        isCalling,
+        deleteBy,
+        blockBy,
+      };
+      console.log(`[add_user_to_group] -->`, info);
+      newMember.forEach((member) => {
+        const user = findUserById(member);
+        if (user)
+          io.to(user.socketId).emit("send_conversation_group", conversation);
+      });
+
+      const newMemberLength = newMember.length;
+      //remove new members to send emit updateLastMessage
+      members.splice(-newMemberLength, newMemberLength);
+      const conversationUpdate = {
+        conversationID: id,
+        contentMessage: lastMessage,
+        createAt: time,
+      };
+      updateConversationBySocket(members, conversationUpdate);
+    } catch (error) {
+      console.warn(`[add_user_to_group] -> ${error}`);
+    }
+  });
+
+  //change name group
+  socket.on("change_name_group", ({ conversation }) => {
+    try {
+      //get conversation have action to update lastMessage
+      const { id, name, action, time, members } = conversation;
+      const _conversation = {
+        conversationID: id,
+        name,
+        contentMessage: action,
+        createAt: time,
+      };
+      updateConversationBySocket(members, _conversation);
+    } catch (error) {
+      console.warn(`[change_name_group] -> ${error}`);
+    }
+  });
+
+  //change avatar group
+  socket.on("change_avatar_group", ({ conversation }) => {
+    try {
+      const { id, imageLink, action, time, members } = conversation;
+      const _conversation = {
+        conversationID: id,
+        imageLink,
+        contentMessage: action,
+        createAt: time,
+      };
+      updateConversationBySocket(members, _conversation);
+    } catch (error) {
+      console.warn(`[change_avatar_group] -> ${error}`);
+    }
+  });
+  
   //block user in group
   socket.on("block_user_in_group", ({ info }) => {
     try {
