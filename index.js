@@ -364,6 +364,27 @@ io.on("connection", (socket) => {
     }
   });
 
+  // block message user
+  socket.on("block_message_user_in_group", ({ info }) => {
+    try {
+      const { blockBy, id, userId } = info;
+      const blockByUserId = findUserById(userId);
+      console.log("[blockByUserId] - ", blockByUserId);
+      const conversationId = id;
+      console.log("[conversationId] - ", conversationId);
+      const arrBlocked = {
+        blockBy,
+        conversationId,
+      };
+
+      if (blockByUserId) {
+        io.to(blockByUserId.socketId).emit("blocked_message_user", arrBlocked);
+      }
+    } catch (error) {
+      console.warn(`[block_message_user_in_group] -> ${error}`);
+    }
+  });
+
   // When user disconnected
   socket.on("disconnect", () => {
     try {
