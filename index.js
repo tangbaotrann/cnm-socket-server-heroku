@@ -388,6 +388,23 @@ io.on("connection", (socket) => {
     }
   });
 
+  // change info single
+  socket.on("change_avatar_single", ({ request }) => {
+    try {
+      // console.log("[REQUEST]", request);
+      const { _id } = request;
+      const user = findUserById(_id);
+
+      // console.log("[USER] - ", user);
+
+      if (user) {
+        io.to(user.socketId).emit("confirm_avatar", _id);
+      }
+    } catch (error) {
+      console.warn(`[change_avatar_group] -> ${error}`);
+    }
+  });
+
   //block user in group
   socket.on("block_user_in_group", ({ info }) => {
     try {
