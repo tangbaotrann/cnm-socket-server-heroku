@@ -54,11 +54,11 @@ const findUserById = (id) => {
 };
 
 io.on("connection", (socket) => {
-  console.log("---> A user connected... " + `${socket.id}`);
+  //console.log("---> A user connected... " + `${socket.id}`);
 
   // status user
   socket.on("status_user", (userId) => {
-    console.log(userId);
+    console.log("---> A user connected... " + `${socket.id} -> ${userId}`);
     try {
       statusUser(userId, socket.id);
 
@@ -85,21 +85,25 @@ io.on("connection", (socket) => {
   socket.on("send_message", ({ message }) => {
     //console.log(message);
     try {
-      const { conversationID, contentMessage, content, createAt } = message;
+      const { conversationID, contentMessage, content, createAt, members } =
+        message;
       const conversation = {
         conversationID,
         content,
         contentMessage,
         createAt,
       };
-      message.members.forEach((member) => {
-        const user = findUserById(member);
-        //console.log("member -> ", user);
-        if (user)
-          io.to(user.socketId).emit("update_last_message", conversation);
-      });
 
-      io.to(message.conversationID).emit("receiver_message", message);
+      console.log("conversation -> ", conversation);
+      updateConversationBySocket(members, conversation);
+      // message.members.forEach((member) => {
+      //   const user = findUserById(member);
+      //   //console.log("member -> ", user);
+      //   if (user)
+      //     io.to(user.socketId).emit("update_last_message", conversation);
+      // });
+
+      io.to(conversationID).emit("receiver_message", message);
     } catch (err) {
       console.log(err);
     }
@@ -123,7 +127,7 @@ io.on("connection", (socket) => {
       const _user = findUserById(receiverId);
       //check user online
       if (_user) {
-        //console.log("destination", _user);
+        console.log("destination", _user);
         io.to(_user.socketId).emit("receiver_friend_request", request);
       } else {
         console.warn("user offline");
@@ -205,14 +209,35 @@ io.on("connection", (socket) => {
   // delete friend (no conversation -> no running)
   socket.on("delete_friend", ({ request }) => {
     try {
-      console.log("[122 - delete friend]", request);
-      const { createdBy, _id, status } = request;
+      const {
+        idReceive,
+        conversationDeleted,
+        idSender,
+        listFriendsUserDelete,
+      } = request;
 
-      const _user = findUserById(createdBy);
-      console.log("[126 - _user]", _user);
+      //find user send(user delete) to delete conversation
+      const userSender = findUserById(idSender);
+      // console.log("userSender ->", userSender);
+      if (userSender) {
+        io.to(userSender.socketId).emit(
+          "remove_conversation_block_group",
+          conversationDeleted
+        );
+      }
 
-      if (_user) {
-        io.to(_user.socketId).emit("confirm_delete", _id);
+      //find user receiver(user deleted) to update friends and remove conversation
+      const userReceiver = findUserById(idReceive);
+      // console.log("userReceiver ->", userReceiver);
+      if (userReceiver) {
+        io.to(userReceiver.socketId).emit(
+          "receive_friends",
+          listFriendsUserDelete
+        );
+        io.to(userReceiver.socketId).emit(
+          "remove_conversation_block_group",
+          conversationDeleted
+        );
       }
     } catch (error) {
       console.log(`[delete_friend] -> ${error}`);
@@ -239,6 +264,7 @@ io.on("connection", (socket) => {
     try {
       const { idSender, friendRequestID } = data;
       const user = findUserById(idSender);
+      console.log(user);
       if (user) {
         io.to(user.socketId).emit("remove_request", friendRequestID);
       }
