@@ -133,7 +133,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // me friend request (new)
+  // me friend request
   socket.on("me_friend_request", ({ request }) => {
     try {
       console.log("[request] - 112", request);
@@ -449,6 +449,29 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.warn(`[block_message_user_in_group] -> ${error}`);
     }
+  });
+
+  // call video
+  socket.emit("me", socket.id);
+  socket.on("endCall", ({ id }) => {
+    const users = findUserById(id);
+    io.to(users.socketId).emit("endCall");
+  });
+
+  socket.on("callUser", (data) => {
+    const users = findUserById(data.userToCall);
+    io.to(users.socketId).emit("callUser", {
+      signal: data.signalData,
+      from: data.from,
+      name: data.name,
+    });
+    console.log("---------callUser", data);
+  });
+
+  socket.on("answerCall", (data) => {
+    const users = findUserById(data.to);
+    io.to(users.socketId).emit("callAccepted", { signal: data.signal });
+    console.log("--------answerCall123456", data);
   });
 
   // When user disconnected
