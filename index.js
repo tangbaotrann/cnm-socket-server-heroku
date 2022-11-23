@@ -141,10 +141,10 @@ io.on("connection", (socket) => {
   socket.on("me_friend_request", ({ request }) => {
     try {
       console.log("[request] - 112", request);
-      const { receiverId } = request;
-      console.log("[receiverId]", receiverId);
+      const { senderId } = request;
+      console.log("[receiverId]", senderId);
 
-      const _user = findUserById(receiverId);
+      const _user = findUserById(senderId);
       console.log("[_user]", _user);
 
       if (_user) {
@@ -366,6 +366,10 @@ io.on("connection", (socket) => {
         contentMessage: action,
         createAt: time,
       };
+      io.to(_conversation.conversationID).emit(
+        "change_name_conversation_of_group",
+        _conversation
+      );
       updateConversationBySocket(members, _conversation);
     } catch (error) {
       console.warn(`[change_name_group] -> ${error}`);
@@ -382,6 +386,10 @@ io.on("connection", (socket) => {
         contentMessage: action,
         createAt: time,
       };
+      io.to(_conversation.conversationID).emit(
+        "change_avatar_conversation_of_group",
+        _conversation
+      );
       updateConversationBySocket(members, _conversation);
     } catch (error) {
       console.warn(`[change_avatar_group] -> ${error}`);
@@ -466,6 +474,7 @@ io.on("connection", (socket) => {
         const user = findUserById(member);
         if (user)
           io.to(user.socketId).emit("update_last_message", conversationUpdate);
+        io.to(user.socketId).emit("updated_member_in_group", info);
       });
     } catch (err) {
       console.warn(`[user_out_group] --> ${err}`);
