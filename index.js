@@ -340,6 +340,16 @@ io.on("connection", (socket) => {
           io.to(user.socketId).emit("send_conversation_group", conversation);
       });
 
+      members.forEach((mem) => {
+        const member = findUserById(mem);
+        if (member) {
+          io.to(member.socketId).emit(
+            "updated_when_add_member_other_in_group",
+            info
+          );
+        }
+      });
+
       const newMemberLength = newMember.length;
       //remove new members to send emit updateLastMessage
       members.splice(-newMemberLength, newMemberLength);
@@ -426,6 +436,18 @@ io.on("connection", (socket) => {
         members,
       };
       //console.log(userBlocked);
+
+      members.forEach((mem) => {
+        // console.log("MEM -> ", mem);
+        const member = findUserById(mem);
+        if (member) {
+          io.to(member.socketId).emit(
+            "updated_when_delete_member_other_in_group",
+            info
+          );
+        }
+      });
+
       if (userBlocked)
         io.to(userBlocked.socketId).emit(
           "remove_conversation_block_group",
