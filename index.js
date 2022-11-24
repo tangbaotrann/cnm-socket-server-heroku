@@ -169,6 +169,7 @@ io.on("connection", (socket) => {
     }) => {
       try {
         const _receiver = findUserById(receiver.id);
+        console.log("[200 - RECEIVER] -> ", receiver.id);
         const _sender = findUserById(sender.id);
         console.log(_receiver, _sender);
         //no run with receiver
@@ -208,9 +209,10 @@ io.on("connection", (socket) => {
 
   // delete friend (no conversation -> no running)
   socket.on("delete_friend", ({ request }) => {
+    console.log("[req - 121]", request);
     try {
       const {
-        idReceive,
+        idReceiver, // idReceive (*Thiếu chữ r)
         conversationDeleted,
         idSender,
         listFriendsUserDelete,
@@ -227,7 +229,7 @@ io.on("connection", (socket) => {
       }
 
       //find user receiver(user deleted) to update friends and remove conversation
-      const userReceiver = findUserById(idReceive);
+      const userReceiver = findUserById(idReceiver);
       // console.log("userReceiver ->", userReceiver);
       if (userReceiver) {
         io.to(userReceiver.socketId).emit(
