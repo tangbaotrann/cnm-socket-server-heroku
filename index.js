@@ -437,7 +437,7 @@ io.on("connection", (socket) => {
         createAt: time,
         members,
       };
-      //console.log(userBlocked);
+      console.log("userBlocked - 440", userBlocked);
 
       members.forEach((mem) => {
         // console.log("MEM -> ", mem);
@@ -548,6 +548,12 @@ io.on("connection", (socket) => {
     const users = findUserById(data.to);
     io.to(users.socketId).emit("callAccepted", { signal: data.signal });
     console.log("--------answerCall123456", data);
+  });
+
+  socket.on("endCallToClient", ({ id }) => {
+    console.log("endCallToClient", id);
+    const users = findUserById(id);
+    io.to(users.socketId).emit("endCallToClient");
   });
 
   // When user disconnected
