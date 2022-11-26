@@ -530,30 +530,46 @@ io.on("connection", (socket) => {
   // call video
   socket.emit("me", socket.id);
   socket.on("endCall", ({ id }) => {
-    const users = findUserById(id);
-    io.to(users.socketId).emit("endCall");
+    try {
+      const users = findUserById(id);
+      io.to(users.socketId).emit("endCall");
+    } catch (error) {
+      console.warn(`[endCall] -> ${error}`);
+    }
   });
 
   socket.on("callUser", (data) => {
-    const users = findUserById(data.userToCall);
-    io.to(users.socketId).emit("callUser", {
-      signal: data.signalData,
-      from: data.from,
-      name: data.name,
-    });
-    console.log("---------callUser", data);
+    try {
+      const users = findUserById(data.userToCall);
+      io.to(users.socketId).emit("callUser", {
+        signal: data.signalData,
+        from: data.from,
+        name: data.name,
+      });
+      console.log("---------callUser", data);
+    } catch (error) {
+      console.warn(`[callUser] -> ${error}`);
+    }
   });
 
   socket.on("answerCall", (data) => {
-    const users = findUserById(data.to);
-    io.to(users.socketId).emit("callAccepted", { signal: data.signal });
-    console.log("--------answerCall123456", data);
+    try {
+      const users = findUserById(data.to);
+      io.to(users.socketId).emit("callAccepted", { signal: data.signal });
+      console.log("--------answerCall123456", data);
+    } catch (error) {
+      console.warn(`[answerCall] -> ${error}`);
+    }
   });
 
   socket.on("endCallToClient", ({ id }) => {
-    console.log("endCallToClient", id);
-    const users = findUserById(id);
-    io.to(users.socketId).emit("endCallToClient");
+    try {
+      console.log("endCallToClient", id);
+      const users = findUserById(id);
+      io.to(users.socketId).emit("endCallToClient");
+    } catch (error) {
+      console.warn(`[endCallToClient] -> ${error}`);
+    }
   });
 
   // When user disconnected
