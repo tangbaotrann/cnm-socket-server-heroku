@@ -499,9 +499,10 @@ io.on("connection", (socket) => {
         io.to(leftUser.socketId).emit("remove_conversation_block_group", _id);
       members.forEach((member) => {
         const user = findUserById(member);
-        if (user)
+        if (user) {
           io.to(user.socketId).emit("update_last_message", conversationUpdate);
-        io.to(user.socketId).emit("updated_member_in_group", info);
+          io.to(user.socketId).emit("updated_member_in_group", info);
+        }
       });
     } catch (err) {
       console.warn(`[user_out_group] --> ${err}`);
