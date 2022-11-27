@@ -527,6 +527,20 @@ io.on("connection", (socket) => {
     }
   });
 
+  // change leader in group
+  socket.on("change_leader", ({ request }) => {
+    try {
+      const { createBy } = request;
+      const user = findUserById(createBy);
+
+      if (user) {
+        io.emit("confirm_change_leader", request);
+      }
+    } catch (error) {
+      console.warn(`[change_leader] -> ${error}`);
+    }
+  });
+
   // call video
   socket.emit("me", socket.id);
   socket.on("endCall", ({ id }) => {
