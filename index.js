@@ -96,12 +96,6 @@ io.on("connection", (socket) => {
 
       console.log("conversation -> ", conversation);
       updateConversationBySocket(members, conversation);
-      // message.members.forEach((member) => {
-      //   const user = findUserById(member);
-      //   //console.log("member -> ", user);
-      //   if (user)
-      //     io.to(user.socketId).emit("update_last_message", conversation);
-      // });
 
       io.to(conversationID).emit("receiver_message", message);
     } catch (err) {
@@ -112,7 +106,21 @@ io.on("connection", (socket) => {
   //recall message
   socket.on("recall_message", ({ message }) => {
     try {
-      //console.log(message);
+      console.log(message);
+
+      const { senderID, conversationID, content, createAt } = message;
+      const conversation = {
+        conversationID,
+        content,
+        createAt,
+      };
+
+      const user = findUserById(senderID);
+
+      if (user) {
+        io.to(user.socketId).emit("update_last_message", conversation);
+      }
+
       io.emit("receiver_recall_message", message);
     } catch (error) {
       console.log(`[recall message] -> ${error}`);
@@ -456,11 +464,6 @@ io.on("connection", (socket) => {
           idConversationBlocked
         );
       updateConversationBySocket(members, conversationUpdate);
-      // members.forEach((member) => {
-      //   const user = findUserById(member);
-      //   if (user)
-      //     io.to(user.socketId).emit("update_last_message", conversationUpdate);
-      // });
     } catch (error) {
       console.warn(`[block_user_in_group] -> ${error}`);
     }
