@@ -121,7 +121,7 @@ io.on("connection", (socket) => {
         io.to(user.socketId).emit("update_last_message", conversation);
       }
 
-      io.emit("receiver_recall_message", message);
+      io.to(conversationID).emit("receiver_recall_message", message);
     } catch (error) {
       console.log(`[recall message] -> ${error}`);
     }
@@ -489,20 +489,28 @@ io.on("connection", (socket) => {
   socket.on("user_out_group", ({ info }) => {
     try {
       const { _id, idMember, action, time, members } = info;
+      console.log("[members] -> ", members);
       const leftUser = findUserById(idMember);
+      console.log("[leftUser] -> ", leftUser);
       const conversationUpdate = {
         conversationID: _id,
         contentMessage: action,
         createAt: time,
       };
-      if (leftUser)
+      if (leftUser) {
         io.to(leftUser.socketId).emit("remove_conversation_block_group", _id);
+      }
+
       members.forEach((member) => {
         const user = findUserById(member);
+        // console.log("[user] -> ", user);
         if (user) {
           io.to(user.socketId).emit("update_last_message", conversationUpdate);
           io.to(user.socketId).emit("updated_member_in_group", info);
         }
+        // else {
+        //   console.log("[user] -> ", user);
+        // }
       });
     } catch (err) {
       console.warn(`[user_out_group] --> ${err}`);
@@ -531,7 +539,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // change leader in group
+  // change leader
   socket.on("change_leader", ({ request }) => {
     try {
       const { createBy } = request;
@@ -550,7 +558,7 @@ io.on("connection", (socket) => {
   socket.on("endCall", ({ id }) => {
     try {
       const users = findUserById(id);
-      io.to(users.socketId).emit("endCall");
+      if (users) io.to(users.socketId).emit("endCall");
     } catch (error) {
       console.warn(`[endCall] -> ${error}`);
     }
@@ -559,11 +567,14 @@ io.on("connection", (socket) => {
   socket.on("callUser", (data) => {
     try {
       const users = findUserById(data.userToCall);
-      io.to(users.socketId).emit("callUser", {
-        signal: data.signalData,
-        from: data.from,
-        name: data.name,
-      });
+      if (users) {
+        io.to(users.socketId).emit("callUser", {
+          signal: data.signalData,
+          from: data.from,
+          name: data.name,
+        });
+      }
+
       console.log("---------callUser", data);
     } catch (error) {
       console.warn(`[callUser] -> ${error}`);
@@ -573,7 +584,9 @@ io.on("connection", (socket) => {
   socket.on("answerCall", (data) => {
     try {
       const users = findUserById(data.to);
-      io.to(users.socketId).emit("callAccepted", { signal: data.signal });
+      if (users) {
+        io.to(users.socketId).emit("callAccepted", { signal: data.signal });
+      }
       console.log("--------answerCall123456", data);
     } catch (error) {
       console.warn(`[answerCall] -> ${error}`);
@@ -584,7 +597,7 @@ io.on("connection", (socket) => {
     try {
       console.log("endCallToClient", id);
       const users = findUserById(id);
-      io.to(users.socketId).emit("endCallToClient");
+      if (users) io.to(users.socketId).emit("endCallToClient");
     } catch (error) {
       console.warn(`[endCallToClient] -> ${error}`);
     }
